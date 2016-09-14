@@ -1,0 +1,456 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 87,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "import nltk\n",
+    "import re\n",
+    "import pprint\n",
+    "from nltk import word_tokenize\n",
+    "import pylab\n",
+    "import sys\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "import math\n",
+    "import matplotlib.pyplot as plt\n",
+    "import argparse"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Make corpus"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "docA=\"the cat sat on my face\"\n",
+    "docB=\"the dog sat on my bed\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Tokenizing\n",
+    "     Split the document into bag of words\n",
+    "     "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "bowA=docA.split()\n",
+    "bowB=docB.split()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['the', 'dog', 'sat', 'on', 'my', 'bed']"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "bowA\n",
+    "bowB"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Create a wordset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "wordSet=set(bowA).union(set(bowB))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Create a dictionary for all bag of words"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "wordDictA=dict.fromkeys(wordSet,0)\n",
+    "wordDictB=dict.fromkeys(wordSet,0)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'bed': 0, 'cat': 0, 'dog': 0, 'face': 0, 'my': 0, 'on': 0, 'sat': 0, 'the': 0}"
+      ]
+     },
+     "execution_count": 15,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "wordDictA"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'bed': 0, 'cat': 0, 'dog': 0, 'face': 0, 'my': 0, 'on': 0, 'sat': 0, 'the': 0}"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "wordDictB"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Count words in my bag of words"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "for word in bowA:\n",
+    "    wordDictA[word]+=1\n",
+    "for word in bowB:\n",
+    "    wordDictB[word]+=1\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'bed': 0, 'cat': 1, 'dog': 0, 'face': 1, 'my': 1, 'on': 1, 'sat': 1, 'the': 1}"
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "wordDictA"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'bed': 1, 'cat': 0, 'dog': 1, 'face': 0, 'my': 1, 'on': 1, 'sat': 1, 'the': 1}"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "wordDictB"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Take the words and convert them into matrix"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>bed</th>\n",
+       "      <th>cat</th>\n",
+       "      <th>dog</th>\n",
+       "      <th>face</th>\n",
+       "      <th>my</th>\n",
+       "      <th>on</th>\n",
+       "      <th>sat</th>\n",
+       "      <th>the</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   bed  cat  dog  face  my  on  sat  the\n",
+       "0    0    1    0     1   1   1    1    1\n",
+       "1    1    0    1     0   1   1    1    1"
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "pd.\n",
+    "([wordDictA,wordDictB])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### ZIPF's LAW\n",
+    "   <li>Compute the term frequency\n",
+    "   <li>Compute the term IDF: Inverse document frequency"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 56,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "def computeTF(wordDict, bow):\n",
+    "    tfDict = {}\n",
+    "    bowCount = len(bow)\n",
+    "    for word, count in wordDict.iteritems():\n",
+    "        tfDict[word] = count / float(bowCount)\n",
+    "    return tfDict"
+   ]
+  },
+  {
+   "cell_type": "raw",
+   "metadata": {},
+   "source": [
+    "tfBowA=computeTF(wordDictA,bowA)\n",
+    "tfBowB=computeTF(wordDictB,bowB)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\n",
+    "### Compute IDF"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 125,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "def computeIDF(docList):\n",
+    "    import math\n",
+    "    idfDict = {}\n",
+    "    N = len(docList)\n",
+    "    val=0\n",
+    "    #counts the number of documents that contain a word w\n",
+    "    idfDict = dict.fromkeys(docList[0].keys(),0)\n",
+    "    for doc in docList:\n",
+    "        for word, val in doc.iteritems():\n",
+    "            if val > 0:\n",
+    "                idfDict[word] +=1\n",
+    "                \n",
+    "    #divide N by denominator above, take the log of that\n",
+    "    for word, val in idfDict.iteritems():\n",
+    "        idfDict[word]= math.log(N / float(val)) \n",
+    "\n",
+    "    return idfDict"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 130,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'IPython' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-130-d80357395590>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0mIPython\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mutils\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mpy2compat\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mPY2\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[0;31mNameError\u001b[0m: name 'IPython' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "IPython.utils.py2compat.PY2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 126,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "ename": "AttributeError",
+     "evalue": "'dict' object has no attribute 'iteritems'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-126-09dbf062167c>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0midfs\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mcomputeIDF\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mwordDictA\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mwordDictB\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[0;32m<ipython-input-125-852ce822d064>\u001b[0m in \u001b[0;36mcomputeIDF\u001b[0;34m(docList)\u001b[0m\n\u001b[1;32m      7\u001b[0m     \u001b[0midfDict\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mdict\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mfromkeys\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdocList\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mkeys\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      8\u001b[0m     \u001b[0;32mfor\u001b[0m \u001b[0mdoc\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mdocList\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 9\u001b[0;31m         \u001b[0;32mfor\u001b[0m \u001b[0mword\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mval\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mdoc\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0miteritems\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     10\u001b[0m             \u001b[0;32mif\u001b[0m \u001b[0mval\u001b[0m \u001b[0;34m>\u001b[0m \u001b[0;36m0\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     11\u001b[0m                 \u001b[0midfDict\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mword\u001b[0m\u001b[0;34m]\u001b[0m \u001b[0;34m+=\u001b[0m\u001b[0;36m1\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mAttributeError\u001b[0m: 'dict' object has no attribute 'iteritems'"
+     ]
+    }
+   ],
+   "source": [
+    "idfs = computeIDF([wordDictA, wordDictB])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "anaconda-cloud": {},
+  "kernelspec": {
+   "display_name": "Python [Root]",
+   "language": "python",
+   "name": "Python [Root]"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.5.2"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 0
+}
